@@ -1,40 +1,40 @@
 # Real-Time Multiplayer Cursor/State Sync
 
-A raw WebSocket multiplayer demo for FLAM AI's frontend R&D assignment. Multiple browser tabs join the same room, see each other's cursors move smoothly, and broadcast click reactions.
+A real-time multiplayer canvas built for FLAM AI's Frontend R&D assignment. Open the app in multiple tabs, join the same room with different names, and you can see live cursors, presence, emoji reactions, and shared drawing strokes sync across clients.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the sync design, file responsibilities, and scaling notes.
+## Live Demo
 
-## Vercel Deployment
+[https://flamappai.vercel.app/dashboard](https://flamappai.vercel.app/dashboard)
 
-This project includes `vercel.json` and `api/[...path].ts` for Vercel hosting.
+## How To Use The Demo
 
-Required Vercel environment variables:
+1. Open the live demo link.
+2. Create a new room from the dashboard.
+3. Choose the room mode:
+   - `Emoji taps`: click/tap the canvas to send reactions.
+   - `Drawing`: drag on the canvas to draw live strokes.
+4. Enter your username when the room asks for it.
+5. Open the same room in 3-5 browser tabs, or share the room link with others.
+6. Enter a different username in each tab.
+7. Move the cursor inside the canvas and watch the other tabs update in real time.
+8. Close a tab and check the presence list; the user should disappear after cleanup.
 
-```text
-MONGODB_URI=mongodb+srv://SASI:<your_real_password>@hackathon.iyreas2.mongodb.net/?appName=Hackathon
-MONGODB_DB=flamai
-```
+The dashboard shows existing MongoDB rooms and the active users currently inside each room. There is no default room and no login/register step; a room must be created from the dashboard, and a username is collected only when entering a room.
 
-Do not commit the real MongoDB password. Keep it only in `server/.env` locally and in Vercel environment variables for deployment.
+## What This Project Shows
 
-## What Works
+This is not a Socket.IO demo. The sync layer is built directly on top of:
 
-- MongoDB-backed room storage. `MONGODB_URI` is required because room records are not saved locally.
-- Dashboard-first flow with no login or register page.
-- Username prompt before entering each room.
-- Existing room list with live active user names.
-- Raw browser `WebSocket` client.
-- Raw Node `http` upgrade server with a small, dependency-free WebSocket frame implementation.
-- Room presence with join, leave, reconnect replacement, and current cursor snapshots for late joiners.
-- Throttled cursor sending at roughly 30Hz instead of blasting every pointer event.
-- Remote cursor interpolation with a 100ms render buffer and bounded short extrapolation.
-- Sequence-number based stale-message rejection on the server and client.
-- Runtime validation for all client-to-server messages.
-- Emoji reactions broadcast to other participants.
-- Optional drawing rooms where users drag to sync stroke segments.
-- Server heartbeat cleanup using WebSocket ping/pong.
+- browser `WebSocket`
+- Node's built-in `http` upgrade event
+- a small custom WebSocket frame parser/writer
+- a TypeScript message protocol
 
-## Setup
+The goal is to show the parts real-time libraries usually hide: protocol design, throttling, interpolation, presence, reconnect behavior, stale message handling, and server-side validation.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the deeper sync design, file responsibilities, and scaling notes.
+
+## Local Setup
 
 Install dependencies:
 
@@ -64,26 +64,57 @@ npm run dev
 Open:
 
 ```text
-http://localhost:5173
+http://localhost:5173/dashboard
 ```
 
-If that port is busy, Vite prints the next available local URL.
+If port `5173` is busy, Vite prints the next available local URL. If server port `8090` is busy, the root dev script automatically finds another server port and passes it to the client.
+
+## Vercel Deployment
+
+This project is already configured for Vercel with `vercel.json` and `api/[...path].ts`.
+
+Use these settings if Vercel asks manually:
+
+```text
+Root Directory: flamai (root)
+Framework Preset: Vite or Other
+Install Command: npm install
+Build Command: npm run build -w client
+Output Directory: client/dist
+```
+
+Required Vercel environment variables:
+
+```text
+MONGODB_URI=mongodb+srv://SASI:<your_real_password>@hackathon.iyreas2.mongodb.net/?appName=Hackathon
+MONGODB_DB=flamai
+```
+
+Do not commit the real MongoDB password. Keep it only in `server/.env` locally and in Vercel environment variables for deployment.
+
+## What Works
+
+- MongoDB-backed room storage. `MONGODB_URI` is required because room records are not saved locally.
+- Dashboard-first flow with no login or register page.
+- Username prompt before entering each room.
+- Existing room list with live active user names.
+- Raw browser `WebSocket` client.
+- Raw Node `http` upgrade server with a small, dependency-free WebSocket frame implementation.
+- Room presence with join, leave, reconnect replacement, and current cursor snapshots for late joiners.
+- Throttled cursor sending at roughly 30Hz instead of blasting every pointer event.
+- Remote cursor interpolation with a 100ms render buffer and bounded short extrapolation.
+- Sequence-number based stale-message rejection on the server and client.
+- Runtime validation for all client-to-server messages.
+- Emoji reactions broadcast to other participants.
+- Optional drawing rooms where users drag to sync stroke segments.
+- Server heartbeat cleanup using WebSocket ping/pong.
 
 Main client routes:
 
 - `/dashboard`
 - `/room/:roomId`
 
-Open the dashboard first. Create a room by choosing a room name and mode. There is no default room creation.
-
-When entering any room, the app asks for a username. Open the same room in 3-5 tabs or devices on the same network, enter different names, and move the pointer over the canvas to send cursor updates. Emoji rooms use clicks for reactions; drawing rooms use drag gestures for synchronized strokes.
-
-When joining a new room, choose the room activity:
-
-- `Emoji taps`: click the canvas to emit the selected emoji burst.
-- `Drawing`: drag on the canvas to draw synchronized strokes.
-
-The first user to create a room sets the mode. Later users who join the same room inherit that room's mode.
+The first user to create a room sets the mode. Later users who join the same room inherit that room's mode, so the room does not change underneath active participants.
 
 The side panel also has:
 
@@ -98,7 +129,8 @@ The lobby shows all persisted MongoDB rooms with the current active users in eac
 The WebSocket endpoint is:
 
 ```text
-ws://localhost:8090/room
+Local: ws://localhost:8090/room
+Vercel: wss://flamappai.vercel.app/api/room
 ```
 
 ## Validation
