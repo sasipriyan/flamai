@@ -2,15 +2,20 @@
 
 A raw WebSocket multiplayer demo for FLAM AI's frontend R&D assignment. Multiple browser tabs join the same room, see each other's cursors move smoothly, and broadcast click reactions.
 
-## Detailed Explanation Docs
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the sync design, file responsibilities, and scaling notes.
 
-For company submission and interview explanation, use these documents:
+## Vercel Deployment
 
-- [Company explanation guide](docs/COMPANY_EXPLANATION.md): what was built, requirement mapping, demo flow, and design decisions.
-- [Real-time sync deep dive](docs/SYNC_DEEP_DIVE.md): WebSocket join flow, presence, cursor sync, interpolation, drawing sync, reactions, cleanup, and scaling.
-- [File-by-file implementation guide](docs/FILE_BY_FILE_GUIDE.md): what every important project file does and how the code works together.
-- [Interview Q&A](docs/INTERVIEW_QA.md): short answers for likely technical questions.
-- [Vercel deployment guide](docs/VERCEL_DEPLOYMENT.md): Vercel hosting setup, WebSocket notes, and required MongoDB environment variables.
+This project includes `vercel.json` and `api/[...path].ts` for Vercel hosting.
+
+Required Vercel environment variables:
+
+```text
+MONGODB_URI=mongodb+srv://SASI:<your_real_password>@hackathon.iyreas2.mongodb.net/?appName=Hackathon
+MONGODB_DB=flamai
+```
+
+Do not commit the real MongoDB password. Keep it only in `server/.env` locally and in Vercel environment variables for deployment.
 
 ## What Works
 
